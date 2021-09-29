@@ -21,27 +21,39 @@ import {
   getAndRemoveAttrByRegex
 } from '../helpers'
 
+// 绑定on
 export const onRE = /^@|^v-on:/
+// 绑定
 export const dirRE = process.env.VBIND_PROP_SHORTHAND
   ? /^v-|^@|^:|^\.|^#/
   : /^v-|^@|^:|^#/
+// 获取别名列表字符串
 export const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
+// 获取for循环中的别名第2个及以后的
 export const forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/
+// 去小括号
 const stripParensRE = /^\(|\)$/g
+// 动态参数
 const dynamicArgRE = /^\[.*\]$/
-
+// 参数
 const argRE = /:(.*)$/
+// bind绑定属性
 export const bindRE = /^:|^\.|^v-bind:/
+// 语法糖.prop
 const propBindRE = /^\./
+// 修饰符
 const modifierRE = /\.[^.\]]+(?=[^\]]*$)/g
-
+// 作用域插槽
 const slotRE = /^v-slot(:|$)|^#/
-
+// 换行
 const lineBreakRE = /[\r\n]/
+// 空格
 const whitespaceRE = /[ \f\t\r\n]+/g
 
+// 失效属性值
 const invalidAttributeRE = /[\s"'<>\/=]/
 
+// cached记忆函数， decode 解码html
 const decodeHTMLCached = cached(he.decode)
 
 export const emptySlotScopeToken = `_empty_`
@@ -50,11 +62,11 @@ export const emptySlotScopeToken = `_empty_`
 export let warn: any
 let delimiters
 let transforms
-let preTransforms
-let postTransforms
-let platformIsPreTag
+let preTransforms // 预处理
+let postTransforms // 延迟后处理
+let platformIsPreTag // 是否是pre标签
 let platformMustUseProp
-let platformGetTagNamespace
+let platformGetTagNamespace // 命名空间
 let maybeComponent
 
 export function createASTElement (
@@ -85,7 +97,7 @@ export function parse (
   platformIsPreTag = options.isPreTag || no
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
-  const isReservedTag = options.isReservedTag || no
+  const isReservedTag = options.isReservedTag || no // 保留标签
   maybeComponent = (el: ASTElement) => !!(
     el.component ||
     el.attrsMap[':is'] ||
@@ -96,16 +108,16 @@ export function parse (
   preTransforms = pluckModuleFunction(options.modules, 'preTransformNode')
   postTransforms = pluckModuleFunction(options.modules, 'postTransformNode')
 
-  delimiters = options.delimiters
+  delimiters = options.delimiters // mustache标记
 
   const stack = []
   const preserveWhitespace = options.preserveWhitespace !== false
   const whitespaceOption = options.whitespace
   let root
   let currentParent
-  let inVPre = false
-  let inPre = false
-  let warned = false
+  let inVPre = false // v-pre中
+  let inPre = false // pre标签
+  let warned = false // 只能警告一次的函数用的标记
 
   function warnOnce (msg, range) {
     if (!warned) {
@@ -114,6 +126,7 @@ export function parse (
     }
   }
 
+  // 闭合标签时做了处理，去掉尾部空格，检查v-if了，然后执行延迟执行的转化函数一般用于微信小程序等
   function closeElement (element) {
     trimEndingWhitespace(element)
     if (!inVPre && !element.processed) {
@@ -215,6 +228,7 @@ export function parse (
     shouldKeepComment: options.comments,
     outputSourceRange: options.outputSourceRange,
     start (tag, attrs, unary, start, end) {
+      // 开标签时用
       // check namespace.
       // inherit parent ns if there is one
       const ns = (currentParent && currentParent.ns) || platformGetTagNamespace(tag)
@@ -264,6 +278,7 @@ export function parse (
       }
 
       // apply pre-transforms
+      // 默认只是处理input，input动态type的要处理radio和option 要想处理别的可以自定义
       for (let i = 0; i < preTransforms.length; i++) {
         element = preTransforms[i](element, options) || element
       }
@@ -293,6 +308,7 @@ export function parse (
         }
       }
 
+      // unary单元标签
       if (!unary) {
         currentParent = element
         stack.push(element)
@@ -773,6 +789,7 @@ function processAttrs (el) {
       // support .foo shorthand syntax for the .prop modifier
       if (process.env.VBIND_PROP_SHORTHAND && propBindRE.test(name)) {
         (modifiers || (modifiers = {})).prop = true
+        // 这块相对主要解决.prop语法糖和修饰符的冲突
         name = `.` + name.slice(1).replace(modifierRE, '')
       } else if (modifiers) {
         name = name.replace(modifierRE, '')

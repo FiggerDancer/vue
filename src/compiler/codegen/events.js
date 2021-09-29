@@ -1,5 +1,8 @@
 /* @flow */
 
+import { createPublicKey } from "crypto"
+
+// 函数正则匹配
 const fnExpRE = /^([\w$_]+|\([^)]*?\))\s*=>|^function(?:\s+[\w$]+)?\s*\(/
 const fnInvokeRE = /\([^)]*?\);*$/
 const simplePathRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['[^']*?']|\["[^"]*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*$/
@@ -56,6 +59,7 @@ export function genHandlers (
   events: ASTElementHandlers,
   isNative: boolean
 ): string {
+  // 是否是原生
   const prefix = isNative ? 'nativeOn:' : 'on:'
   let staticHandlers = ``
   let dynamicHandlers = ``
@@ -67,6 +71,7 @@ export function genHandlers (
       staticHandlers += `"${name}":${handlerCode},`
     }
   }
+  // 去掉尾部的，
   staticHandlers = `{${staticHandlers.slice(0, -1)}}`
   if (dynamicHandlers) {
     return prefix + `_d(${staticHandlers},[${dynamicHandlers.slice(0, -1)}])`
@@ -75,6 +80,7 @@ export function genHandlers (
   }
 }
 
+// 给微信用的
 // Generate handler code with binding params on Weex
 /* istanbul ignore next */
 function genWeexHandler (params: Array<any>, handlerCode: string) {
@@ -93,6 +99,7 @@ function genWeexHandler (params: Array<any>, handlerCode: string) {
     '}'
 }
 
+// 生成处理函数
 function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): string {
   if (!handler) {
     return 'function(){}'
@@ -102,9 +109,9 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
     return `[${handler.map(handler => genHandler(handler)).join(',')}]`
   }
 
-  const isMethodPath = simplePathRE.test(handler.value)
-  const isFunctionExpression = fnExpRE.test(handler.value)
-  const isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, ''))
+  const isMethodPath = simplePathRE.test(handler.value) // method 这么理解  @click="hello"  methods:{hello(){}}
+  const isFunctionExpression = fnExpRE.test(handler.value) // @click="function(){}" || @click="() => {}"
+  const isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, '')) // @click="hello()" methods:{hello(){}}
 
   if (!handler.modifiers) {
     if (isMethodPath || isFunctionExpression) {
