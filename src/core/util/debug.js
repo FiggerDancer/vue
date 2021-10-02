@@ -33,6 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  // 格式化的名称
   formatComponentName = (vm, includeFile) => {
     if (vm.$root === vm) {
       return '<Root>'
@@ -65,6 +66,7 @@ if (process.env.NODE_ENV !== 'production') {
     return res
   }
 
+  // 组件在组件树上路径轨迹
   generateComponentTrace = vm => {
     if (vm._isVue && vm.$parent) {
       const tree = []
@@ -72,12 +74,12 @@ if (process.env.NODE_ENV !== 'production') {
       while (vm) {
         if (tree.length > 0) {
           const last = tree[tree.length - 1]
-          if (last.constructor === vm.constructor) {
-            currentRecursiveSequence++
+          if (last.constructor === vm.constructor) { // 组件类型相同
+            currentRecursiveSequence++ // 嵌套层级+1
             vm = vm.$parent
             continue
           } else if (currentRecursiveSequence > 0) {
-            tree[tree.length - 1] = [last, currentRecursiveSequence]
+            tree[tree.length - 1] = [last, currentRecursiveSequence] // 统计出该节点的层级数并存入
             currentRecursiveSequence = 0
           }
         }

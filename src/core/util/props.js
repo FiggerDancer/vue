@@ -28,13 +28,16 @@ export function validateProp (
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
   // boolean casting
+  // boolean型索引的位置
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
+    // boolean值类型的数据，默认值使用false
     if (absent && !hasOwn(prop, 'default')) {
       value = false
     } else if (value === '' || value === hyphenate(key)) {
       // only cast empty string / same name to boolean if
       // boolean has higher priority
+      // 如果该属性同时允许为字符串和布尔值，且用户填的是''或连字符的key值时.若布尔值在数组中排在字符串前面则让使该值默认为true
       const stringIndex = getTypeIndex(String, prop.type)
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
@@ -46,6 +49,7 @@ export function validateProp (
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
     // make sure to observe it.
+    // 因为默认值是一个新的副本，确保要观测到他
     const prevShouldObserve = shouldObserve
     toggleObserving(true)
     observe(value)
@@ -63,6 +67,7 @@ export function validateProp (
 
 /**
  * Get the default value of a prop.
+ * 获取默认值
  */
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
   // no default, return undefined
@@ -95,6 +100,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
 }
 
 /**
+ * 判定属性是否有效，比如类型校验、校验函数等
  * Assert whether a prop is valid.
  */
 function assertProp (
@@ -147,13 +153,16 @@ function assertProp (
   }
 }
 
+// 简单类型的判断
 const simpleCheckRE = /^(String|Number|Boolean|Function|Symbol|BigInt)$/
 
+// 断言是否是期望的数据类型
 function assertType (value: any, type: Function, vm: ?Component): {
   valid: boolean;
   expectedType: string;
 } {
   let valid
+  // 获取期待的数据类型
   const expectedType = getType(type)
   if (simpleCheckRE.test(expectedType)) {
     const t = typeof value
@@ -180,9 +189,11 @@ function assertType (value: any, type: Function, vm: ?Component): {
   }
 }
 
+// 方法类型校验的正则
 const functionTypeCheckRE = /^\s*function (\w+)/
 
 /**
+ * 使用函数字符串名来检查内置类型，因为在不同的vms / iframe中运行时，简单的相等检查将失败。
  * Use function string name to check built-in types,
  * because a simple equality check will fail when running
  * across different vms / iframes.
@@ -192,10 +203,12 @@ function getType (fn) {
   return match ? match[1] : ''
 }
 
+// 是否是相同的类型
 function isSameType (a, b) {
   return getType(a) === getType(b)
 }
 
+// 返回使用的类型在定义类型数组中的索引，没有则返回-1
 function getTypeIndex (type, expectedTypes): number {
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1
@@ -208,6 +221,7 @@ function getTypeIndex (type, expectedTypes): number {
   return -1
 }
 
+// 获取失效的type信息
 function getInvalidTypeMessage (name, value, expectedTypes) {
   let message = `Invalid prop: type check failed for prop "${name}".` +
     ` Expected ${expectedTypes.map(capitalize).join(', ')}`
@@ -230,6 +244,7 @@ function getInvalidTypeMessage (name, value, expectedTypes) {
   return message
 }
 
+// 样式值
 function styleValue (value, type) {
   if (type === 'String') {
     return `"${value}"`
@@ -240,11 +255,13 @@ function styleValue (value, type) {
   }
 }
 
+// 可解释的类型
 const EXPLICABLE_TYPES = ['string', 'number', 'boolean']
 function isExplicable (value) {
   return EXPLICABLE_TYPES.some(elem => value.toLowerCase() === elem)
 }
 
+// 布尔值
 function isBoolean (...args) {
   return args.some(elem => elem.toLowerCase() === 'boolean')
 }

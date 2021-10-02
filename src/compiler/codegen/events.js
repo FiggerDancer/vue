@@ -136,6 +136,7 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
           keys.push(key)
         }
       } else if (key === 'exact') {
+        // 该修饰符表示至少同时按下键盘两个键，其中一个是ctrl、shift、alt或meta
         const modifiers: ASTModifiers = (handler.modifiers: any)
         genModifierCode += genGuard(
           ['ctrl', 'shift', 'alt', 'meta']
@@ -151,9 +152,11 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
       code += genKeyFilter(keys)
     }
     // Make sure modifiers like prevent and stop get executed after key filtering
+    // 注意：要保证修饰器像prevent和stop必须要在过滤key后使用
     if (genModifierCode) {
       code += genModifierCode
     }
+    // 根据不同类型处理函数代码
     const handlerCode = isMethodPath
       ? `return ${handler.value}.apply(null, arguments)`
       : isFunctionExpression
@@ -171,6 +174,8 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
 
 function genKeyFilter (keys: Array<string>): string {
   return (
+    // 如果是键盘事件且没有相关code则直接返回null终止运行。不要使用keyCode在$event里因为在没有keyCode属性时，Chrome会自动填充导致触发模拟的key事件
+    // 有一点要注意 !$event.type.indexOf('key') 写法有点奇怪，这种写法在以key开头时 返回的值为true，否则返回false
     // make sure the key filters only apply to KeyboardEvents
     // #9441: can't use 'keyCode' in $event because Chrome autofill fires fake
     // key events that do not have keyCode property...
@@ -181,6 +186,7 @@ function genKeyFilter (keys: Array<string>): string {
 
 function genFilterCode (key: string): string {
   const keyVal = parseInt(key, 10)
+  // 如果key是keyCode数字
   if (keyVal) {
     return `$event.keyCode!==${keyVal}`
   }

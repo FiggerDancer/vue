@@ -36,6 +36,7 @@ export function generateCodeFrame (
   return res.join('\n')
 }
 
+// 将字符串重复n遍
 function repeat (str, n) {
   let result = ''
   if (n > 0) {

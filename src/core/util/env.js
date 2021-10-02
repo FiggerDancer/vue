@@ -20,6 +20,7 @@ export const isFF = UA && UA.match(/firefox\/(\d+)/)
 // Firefox has a "watch" function on Object.prototype...
 export const nativeWatch = ({}).watch
 
+// 用于判断addEventListener支持不支持options
 export let supportsPassive = false
 if (inBrowser) {
   try {
@@ -70,6 +71,7 @@ if (typeof Set !== 'undefined' && isNative(Set)) {
   _Set = Set
 } else {
   // a non-standard Set polyfill that only works with primitive keys.
+  // 模拟一个不标准的Set
   _Set = class Set implements SimpleSet {
     set: Object;
     constructor () {

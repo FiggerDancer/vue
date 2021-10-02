@@ -31,6 +31,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   }
   Object.defineProperty(Vue, 'config', configDef)
 
+  // 暴露了工具方法，注意：避免使用，除非你不担心风险
   // exposed util methods.
   // NOTE: these are not considered part of the public API - avoid relying on
   // them unless you are aware of the risk.
