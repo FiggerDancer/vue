@@ -11,6 +11,7 @@ import {
   isPlainObject
 } from 'shared/util'
 
+// 规范化需要监听的事件名称，并根据修饰符确定监听方式
 const normalizeEvent = cached((name: string): {
   name: string,
   once: boolean,
@@ -33,6 +34,7 @@ const normalizeEvent = cached((name: string): {
   }
 })
 
+// 创造函数调用者
 export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component): Function {
   function invoker () {
     const fns = invoker.fns
@@ -50,6 +52,7 @@ export function createFnInvoker (fns: Function | Array<Function>, vm: ?Component
   return invoker
 }
 
+// 更新绑定的事件
 export function updateListeners (
   on: Object,
   oldOn: Object,
@@ -64,6 +67,7 @@ export function updateListeners (
     old = oldOn[name]
     event = normalizeEvent(name)
     /* istanbul ignore if */
+    // 微信
     if (__WEEX__ && isPlainObject(def)) {
       cur = def.handler
       event.params = def.params

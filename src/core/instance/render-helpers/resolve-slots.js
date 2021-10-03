@@ -3,6 +3,7 @@
 import type VNode from 'core/vdom/vnode'
 
 /**
+ * 用于将原始子vnode解析为槽对象的运行时助手。
  * Runtime helper for resolving raw children VNodes into a slot object.
  */
 export function resolveSlots (
@@ -36,6 +37,7 @@ export function resolveSlots (
       (slots.default || (slots.default = [])).push(child)
     }
   }
+  // 忽略掉仅包含空格的slot
   // ignore slots that contains only whitespace
   for (const name in slots) {
     if (slots[name].every(isWhitespace)) {

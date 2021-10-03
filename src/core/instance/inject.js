@@ -4,6 +4,7 @@ import { hasOwn } from 'shared/util'
 import { warn, hasSymbol } from '../util/index'
 import { defineReactive, toggleObserving } from '../observer/index'
 
+// 初始化provide
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
@@ -13,6 +14,7 @@ export function initProvide (vm: Component) {
   }
 }
 
+// 初始化inject
 export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
@@ -36,8 +38,10 @@ export function initInjections (vm: Component) {
   }
 }
 
+// 分解inject
 export function resolveInject (inject: any, vm: Component): ?Object {
   if (inject) {
+    // 因为flow不够智能，无法计算出缓存
     // inject is :any because flow is not smart enough to figure out cached
     const result = Object.create(null)
     const keys = hasSymbol
@@ -50,6 +54,7 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       if (key === '__ob__') continue
       const provideKey = inject[key].from
       let source = vm
+      // 迭代从父类中找
       while (source) {
         if (source._provided && hasOwn(source._provided, provideKey)) {
           result[key] = source._provided[provideKey]

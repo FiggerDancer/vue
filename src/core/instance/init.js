@@ -12,6 +12,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+// 初始化混合器
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
@@ -26,10 +27,12 @@ export function initMixin (Vue: Class<Component>) {
       mark(startTag)
     }
 
+    // 一个标记避免被监听
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
+      // 优化内部组件实例化 因为动态选项合并非常慢，而且没有 内部组件选项需要特殊处理。
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
@@ -47,6 +50,7 @@ export function initMixin (Vue: Class<Component>) {
     } else {
       vm._renderProxy = vm
     }
+    // 暴露真实的实例
     // expose real self
     vm._self = vm
     initLifecycle(vm)
@@ -71,8 +75,10 @@ export function initMixin (Vue: Class<Component>) {
   }
 }
 
+// 初始化内置组件
 export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
   const opts = vm.$options = Object.create(vm.constructor.options)
+  // 之所以这样做是因为它比动态枚举更快
   // doing this because it's faster than dynamic enumeration.
   const parentVnode = options._parentVnode
   opts.parent = options.parent
@@ -90,6 +96,7 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   }
 }
 
+// 分解构造函数选项
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
   if (Ctor.super) {
@@ -114,6 +121,7 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
   return options
 }
 
+// 分解修饰符选项
 function resolveModifiedOptions (Ctor: Class<Component>): ?Object {
   let modified
   const latest = Ctor.options

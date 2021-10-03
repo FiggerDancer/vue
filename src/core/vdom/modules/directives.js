@@ -12,14 +12,16 @@ export default {
   }
 }
 
+// 更新指令
 function updateDirectives (oldVnode: VNodeWithData, vnode: VNodeWithData) {
   if (oldVnode.data.directives || vnode.data.directives) {
     _update(oldVnode, vnode)
   }
 }
 
+// 更新指令
 function _update (oldVnode, vnode) {
-  const isCreate = oldVnode === emptyNode
+  const isCreate = oldVnode === emptyNode // 是不是刚刚创建
   const isDestroy = vnode === emptyNode
   const oldDirs = normalizeDirectives(oldVnode.data.directives, oldVnode.context)
   const newDirs = normalizeDirectives(vnode.data.directives, vnode.context)
@@ -33,12 +35,14 @@ function _update (oldVnode, vnode) {
     dir = newDirs[key]
     if (!oldDir) {
       // new directive, bind
+      // 新钩子 触发bind
       callHook(dir, 'bind', vnode, oldVnode)
       if (dir.def && dir.def.inserted) {
         dirsWithInsert.push(dir)
       }
     } else {
       // existing directive, update
+      // 已存在的钩子调用更新
       dir.oldValue = oldDir.value
       dir.oldArg = oldDir.arg
       callHook(dir, 'update', vnode, oldVnode)
@@ -48,6 +52,7 @@ function _update (oldVnode, vnode) {
     }
   }
 
+  // 重新触发组件上的所有插入钩子
   if (dirsWithInsert.length) {
     const callInsert = () => {
       for (let i = 0; i < dirsWithInsert.length; i++) {
@@ -61,6 +66,7 @@ function _update (oldVnode, vnode) {
     }
   }
 
+  // 合并 postpatch 钩子
   if (dirsWithPostpatch.length) {
     mergeVNodeHook(vnode, 'postpatch', () => {
       for (let i = 0; i < dirsWithPostpatch.length; i++) {
@@ -73,6 +79,7 @@ function _update (oldVnode, vnode) {
     for (key in oldDirs) {
       if (!newDirs[key]) {
         // no longer present, unbind
+        // 解绑不用的钩子
         callHook(oldDirs[key], 'unbind', oldVnode, oldVnode, isDestroy)
       }
     }
@@ -81,6 +88,7 @@ function _update (oldVnode, vnode) {
 
 const emptyModifiers = Object.create(null)
 
+// 规范化指令
 function normalizeDirectives (
   dirs: ?Array<VNodeDirective>,
   vm: Component
@@ -104,10 +112,12 @@ function normalizeDirectives (
   return res
 }
 
+// 获取指令原始名称
 function getRawDirName (dir: VNodeDirective): string {
   return dir.rawName || `${dir.name}.${Object.keys(dir.modifiers || {}).join('.')}`
 }
 
+// 调用指令的钩子
 function callHook (dir, hook, vnode, oldVnode, isDestroy) {
   const fn = dir.def && dir.def[hook]
   if (fn) {

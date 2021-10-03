@@ -3,6 +3,7 @@
 import config from 'core/config'
 import { warn, makeMap, isNative } from '../util/index'
 
+// 初始化代理
 let initProxy
 
 if (process.env.NODE_ENV !== 'production') {
@@ -52,6 +53,7 @@ if (process.env.NODE_ENV !== 'production') {
     })
   }
 
+  // 有就提示
   const hasHandler = {
     has (target, key) {
       const has = key in target
@@ -65,6 +67,7 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  // 用再提示
   const getHandler = {
     get (target, key) {
       if (typeof key === 'string' && !(key in target)) {

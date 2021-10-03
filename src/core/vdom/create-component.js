@@ -32,6 +32,7 @@ import {
   renderRecyclableComponentTemplate
 } from 'weex/runtime/recycle-list/render-component-template'
 
+// 补丁期间在组件vnode上调用的内联钩子
 // inline hooks to be invoked on component VNodes during patch
 const componentVNodeHooks = {
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
@@ -52,6 +53,7 @@ const componentVNodeHooks = {
     }
   },
 
+  // 更新子组件
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions
     const child = vnode.componentInstance = oldVnode.componentInstance
@@ -64,6 +66,7 @@ const componentVNodeHooks = {
     )
   },
 
+  // 插入
   insert (vnode: MountedComponentVNode) {
     const { context, componentInstance } = vnode
     if (!componentInstance._isMounted) {
@@ -72,6 +75,7 @@ const componentVNodeHooks = {
     }
     if (vnode.data.keepAlive) {
       if (context._isMounted) {
+        // 在更新过程中，保持活动的组件的子组件可能会更改，因此直接遍历树可能会调用激活的钩子 不正确的子结点。相反，我们把它们放到一个队列中 整个补丁进程结束后再处理。
         // vue-router#1212
         // During updates, a kept-alive component's child components may
         // change, so directly walking the tree here may call activated hooks
@@ -84,6 +88,7 @@ const componentVNodeHooks = {
     }
   },
 
+  // 销毁
   destroy (vnode: MountedComponentVNode) {
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
@@ -98,6 +103,7 @@ const componentVNodeHooks = {
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
 
+// 创建组件
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -126,6 +132,7 @@ export function createComponent (
   }
 
   // async component
+  // 异步组件
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
@@ -146,6 +153,7 @@ export function createComponent (
 
   data = data || {}
 
+  // 解析构造函数选项，以防之后应用全局mixin 创建组件构造函数
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
   resolveConstructorOptions(Ctor)
@@ -159,6 +167,7 @@ export function createComponent (
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component
+  // 函数式组件不存在listeners 插槽等
   if (isTrue(Ctor.options.functional)) {
     return createFunctionalComponent(Ctor, propsData, data, context, children)
   }
@@ -171,6 +180,7 @@ export function createComponent (
   data.on = data.nativeOn
 
   if (isTrue(Ctor.options.abstract)) {
+    // 抽象组件不保留任何东西
     // abstract components do not keep anything
     // other than props & listeners & slot
 
@@ -205,6 +215,7 @@ export function createComponent (
   return vnode
 }
 
+// 创建Vnode组件实例
 export function createComponentInstanceForVnode (
   // we know it's MountedComponentVNode but flow doesn't
   vnode: any,
@@ -217,6 +228,7 @@ export function createComponentInstanceForVnode (
     parent
   }
   // check inline-template render functions
+  // 内联template
   const inlineTemplate = vnode.data.inlineTemplate
   if (isDef(inlineTemplate)) {
     options.render = inlineTemplate.render
@@ -225,6 +237,7 @@ export function createComponentInstanceForVnode (
   return new vnode.componentOptions.Ctor(options)
 }
 
+// 安装钩子
 function installComponentHooks (data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
@@ -237,6 +250,7 @@ function installComponentHooks (data: VNodeData) {
   }
 }
 
+// 合并钩子
 function mergeHook (f1: any, f2: any): Function {
   const merged = (a, b) => {
     // flow complains about extra args which is why we use any
@@ -247,6 +261,7 @@ function mergeHook (f1: any, f2: any): Function {
   return merged
 }
 
+// v-model转化为事件和属性
 // transform component v-model info (value and callback) into
 // prop and event handler respectively.
 function transformModel (options, data: any) {

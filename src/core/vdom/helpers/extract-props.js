@@ -14,6 +14,7 @@ export function extractPropsFromVNodeData (
   Ctor: Class<Component>,
   tag?: string
 ): ?Object {
+  // 我们仅仅导出原始值。校验和默认值被子组件本身处理
   // we are only extracting raw values here.
   // validation and default values are handled in the child
   // component itself.
@@ -25,6 +26,7 @@ export function extractPropsFromVNodeData (
   const { attrs, props } = data
   if (isDef(attrs) || isDef(props)) {
     for (const key in propOptions) {
+      // 连字符形式
       const altKey = hyphenate(key)
       if (process.env.NODE_ENV !== 'production') {
         const keyInLowerCase = key.toLowerCase()
@@ -49,6 +51,7 @@ export function extractPropsFromVNodeData (
   return res
 }
 
+// 检查hash中是否存在对应属性并将其值赋给res
 function checkProp (
   res: Object,
   hash: ?Object,

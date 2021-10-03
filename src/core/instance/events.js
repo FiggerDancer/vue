@@ -9,6 +9,7 @@ import {
 } from '../util/index'
 import { updateListeners } from '../vdom/helpers/index'
 
+// 事件监听器
 export function initEvents (vm: Component) {
   vm._events = Object.create(null)
   vm._hasHookEvent = false
@@ -39,6 +40,7 @@ function createOnceHandler (event, fn) {
   }
 }
 
+// 更新组件的监听器
 export function updateComponentListeners (
   vm: Component,
   listeners: Object,
@@ -49,6 +51,7 @@ export function updateComponentListeners (
   target = undefined
 }
 
+// 事件混合器
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {

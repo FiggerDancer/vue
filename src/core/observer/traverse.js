@@ -7,6 +7,7 @@ import VNode from '../vdom/vnode'
 const seenObjects = new Set()
 
 /**
+ * 递归遍历对象以唤起所有转换 getters，以便每个嵌套的属性在对象内部被收集为“深度”依赖。
  * Recursively traverse an object to evoke all converted
  * getters, so that every nested property inside the object
  * is collected as a "deep" dependency.

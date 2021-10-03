@@ -11,9 +11,9 @@ export default class VNode {
   key: string | number | void;
   componentOptions: VNodeComponentOptions | void;
   componentInstance: Component | void; // component instance
-  parent: VNode | void; // component placeholder node
+  parent: VNode | void; // component placeholder node // 组件占位节点
 
-  // strictly internal
+  // strictly internal // 内置属性
   raw: boolean; // contains raw HTML? (server only)
   isStatic: boolean; // hoisted static node
   isRootInsert: boolean; // necessary for enter transition check
@@ -64,6 +64,7 @@ export default class VNode {
     this.isAsyncPlaceholder = false
   }
 
+  // 弃用：组件实例别名
   // DEPRECATED: alias for componentInstance for backwards compat.
   /* istanbul ignore next */
   get child (): Component | void {
@@ -82,6 +83,7 @@ export function createTextVNode (val: string | number) {
   return new VNode(undefined, undefined, undefined, String(val))
 }
 
+// 优化浅拷贝
 // optimized shallow clone
 // used for static nodes and slot nodes because they may be reused across
 // multiple renders, cloning them avoids errors when DOM manipulations rely
@@ -90,7 +92,8 @@ export function cloneVNode (vnode: VNode): VNode {
   const cloned = new VNode(
     vnode.tag,
     vnode.data,
-    // #7975
+    // #
+    // 克隆子数组，以避免在克隆的情况下对原始的子元素修改
     // clone children array to avoid mutating original in case of cloning
     // a child.
     vnode.children && vnode.children.slice(),

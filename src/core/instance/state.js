@@ -29,6 +29,7 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
+// 公用属性定义
 const sharedPropertyDefinition = {
   enumerable: true,
   configurable: true,
@@ -36,6 +37,7 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// 代理
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -46,6 +48,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 初始化各种状态
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -62,13 +65,16 @@ export function initState (vm: Component) {
   }
 }
 
+// 初始化属性
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
+  // 缓存属性键，以便将来的属性更新可以使用Array进行迭代 而不是动态对象键枚举。
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
   const keys = vm.$options._propKeys = []
   const isRoot = !vm.$parent
+  // 根实例属性应该被转变
   // root instance props should be converted
   if (!isRoot) {
     toggleObserving(false)
@@ -100,6 +106,7 @@ function initProps (vm: Component, propsOptions: Object) {
     } else {
       defineReactive(props, key, value)
     }
+    // 静态属性已经被代理到组件的原型上了  在Vue.extend()。我们只需要定义的代理道具 /实例化。
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
@@ -110,6 +117,7 @@ function initProps (vm: Component, propsOptions: Object) {
   toggleObserving(true)
 }
 
+// 初始化data
 function initData (vm: Component) {
   let data = vm.$options.data
   data = vm._data = typeof data === 'function'
@@ -124,8 +132,9 @@ function initData (vm: Component) {
     )
   }
   // proxy data on instance
+  // 代理数据
   const keys = Object.keys(data)
-  const props = vm.$options.props
+  const props = vm.$options.props // 用于重复警告
   const methods = vm.$options.methods
   let i = keys.length
   while (i--) {
@@ -148,10 +157,12 @@ function initData (vm: Component) {
       proxy(vm, `_data`, key)
     }
   }
+  // 监听数据
   // observe data
   observe(data, true /* asRootData */)
 }
 
+// 获取data
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
@@ -165,12 +176,15 @@ export function getData (data: Function, vm: Component): any {
   }
 }
 
+// 计算属性监听选项
 const computedWatcherOptions = { lazy: true }
 
+// 初始化计算属性
 function initComputed (vm: Component, computed: Object) {
   // $flow-disable-line
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
+  // 计算属性在ssr中只有get
   const isSSR = isServerRendering()
 
   for (const key in computed) {
@@ -185,6 +199,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // 创建内部的监听器
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -193,6 +208,7 @@ function initComputed (vm: Component, computed: Object) {
       )
     }
 
+    // 组件定义的计算属性已经在 组件原型。我们只需要定义已定义的计算属性 实例化这里。
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
@@ -210,18 +226,22 @@ function initComputed (vm: Component, computed: Object) {
   }
 }
 
+// 定义计算属性
 export function defineComputed (
   target: any,
   key: string,
   userDef: Object | Function
 ) {
+  // 服务器渲染
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
+    // 从缓存中还是自己去调用get
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
   } else {
+    // 创建一个新的
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
         ? createComputedGetter(key)
@@ -238,9 +258,11 @@ export function defineComputed (
       )
     }
   }
+  // 监听target中key的变换
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 创建计算属性getter
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
@@ -256,12 +278,14 @@ function createComputedGetter (key) {
   }
 }
 
+// 创建get调用器
 function createGetterInvoker(fn) {
   return function computedGetter () {
     return fn.call(this, this)
   }
 }
 
+// 初始化方法
 function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
@@ -290,6 +314,7 @@ function initMethods (vm: Component, methods: Object) {
   }
 }
 
+// 初始化watch
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
@@ -303,6 +328,7 @@ function initWatch (vm: Component, watch: Object) {
   }
 }
 
+// 创建watcher
 function createWatcher (
   vm: Component,
   expOrFn: string | Function,
@@ -319,6 +345,7 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
+// 状态混合器
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
@@ -339,6 +366,7 @@ export function stateMixin (Vue: Class<Component>) {
       warn(`$props is readonly.`, this)
     }
   }
+  // 使用$data,$props代理
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 

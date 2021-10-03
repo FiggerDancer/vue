@@ -27,6 +27,7 @@ function ensureCtor (comp: any, base) {
     : comp
 }
 
+// 创建异步占位符
 export function createAsyncPlaceholder (
   factory: Function,
   data: ?VNodeData,
@@ -40,6 +41,7 @@ export function createAsyncPlaceholder (
   return node
 }
 
+// 异步组件
 export function resolveAsyncComponent (
   factory: Function,
   baseCtor: Class<Component>
@@ -52,9 +54,11 @@ export function resolveAsyncComponent (
     return factory.resolved
   }
 
+  // 将工厂函数的拥有者中加入当前正在渲染的实例
   const owner = currentRenderingInstance
   if (owner && isDef(factory.owners) && factory.owners.indexOf(owner) === -1) {
     // already pending
+    // 已经处于执行状态
     factory.owners.push(owner)
   }
 
@@ -68,13 +72,17 @@ export function resolveAsyncComponent (
     let timerLoading = null
     let timerTimeout = null
 
+    // destroyed钩子时移除这个拥有者关系
     ;(owner: any).$on('hook:destroyed', () => remove(owners, owner))
 
+    // 强制渲染
     const forceRender = (renderCompleted: boolean) => {
+      // 强制更新拥有所有的该异步组件
       for (let i = 0, l = owners.length; i < l; i++) {
         (owners[i]: any).$forceUpdate()
       }
 
+      // 渲染完成时，删除清空该函数的拥有者，清空计时器
       if (renderCompleted) {
         owners.length = 0
         if (timerLoading !== null) {
@@ -88,9 +96,12 @@ export function resolveAsyncComponent (
       }
     }
 
+    // 只会执行一次
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
+      // 缓存异步组件
       factory.resolved = ensureCtor(res, baseCtor)
+      //  只有在不是同步解析时才调用回调 在SSR期间异步解析是同步的
       // invoke callbacks only if this is not a synchronous resolve
       // (async resolves are shimmed as synchronous during SSR)
       if (!sync) {
@@ -114,18 +125,19 @@ export function resolveAsyncComponent (
     const res = factory(resolve, reject)
 
     if (isObject(res)) {
-      if (isPromise(res)) {
+      if (isPromise(res)) { // 使用的引入方式传入的是一个组件
         // () => Promise
         if (isUndef(factory.resolved)) {
           res.then(resolve, reject)
         }
-      } else if (isPromise(res.component)) {
+      } else if (isPromise(res.component)) { // 使用的引入方式传入的是个对象
         res.component.then(resolve, reject)
 
         if (isDef(res.error)) {
           factory.errorComp = ensureCtor(res.error, baseCtor)
         }
 
+        // 延时200ms进入factory加载状态，即显示相应的加载组件
         if (isDef(res.loading)) {
           factory.loadingComp = ensureCtor(res.loading, baseCtor)
           if (res.delay === 0) {
@@ -141,6 +153,7 @@ export function resolveAsyncComponent (
           }
         }
 
+        // 超时显示错误
         if (isDef(res.timeout)) {
           timerTimeout = setTimeout(() => {
             timerTimeout = null
@@ -155,8 +168,9 @@ export function resolveAsyncComponent (
         }
       }
     }
-
+    // 同步结束
     sync = false
+    // 未加载完的时候返回loadingComp，加载完返回resolved
     // return in case resolved synchronously
     return factory.loading
       ? factory.loadingComp

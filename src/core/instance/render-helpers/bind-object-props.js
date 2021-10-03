@@ -12,6 +12,7 @@ import {
 } from 'core/util/index'
 
 /**
+ * 用于将v-bind="object"合并到VNode的数据中的运行时助手。
  * Runtime helper for merging v-bind="object" into a VNode's data.
  */
 export function bindObjectProps (

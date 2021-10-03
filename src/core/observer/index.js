@@ -19,6 +19,7 @@ import {
 const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
 
 /**
+ * 在某些情况下，我们可能想要禁用组件内部的观察更新计算。
  * In some cases we may want to disable observation inside a component's
  * update computation.
  */
@@ -29,6 +30,7 @@ export function toggleObserving (value: boolean) {
 }
 
 /**
+ * 附加到每个被观察对象的观察者类对象。一旦附加，观察者就转换目标对象的属性键进入getter/setter 收集依赖项并分派更新。
  * Observer class that is attached to each observed
  * object. Once attached, the observer converts the target
  * object's property keys into getter/setters that
@@ -45,7 +47,7 @@ export class Observer {
     this.vmCount = 0
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { // 这里是为了兼容没有原型链的ie，给数组api增加响应式
         protoAugment(value, arrayMethods)
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
@@ -57,6 +59,7 @@ export class Observer {
   }
 
   /**
+   * 遍历所有属性并将它们转换为 getter / setter。此方法只应在以下情况下调用 value type为Object。
    * Walk through all properties and convert them into
    * getter/setters. This method should only be called when
    * value type is Object.
@@ -69,6 +72,7 @@ export class Observer {
   }
 
   /**
+   * 监听数组时需要监听数组的每个元素
    * Observe a list of Array items.
    */
   observeArray (items: Array<any>) {
@@ -81,6 +85,7 @@ export class Observer {
 // helpers
 
 /**
+ * 通过拦截增加目标对象或数组原型链使用__proto__
  * Augment a target Object or Array by intercepting
  * the prototype chain using __proto__
  */
@@ -91,6 +96,7 @@ function protoAugment (target, src: Object) {
 }
 
 /**
+ * 通过定义来扩充目标对象或数组隐藏属性。
  * Augment a target Object or Array by defining
  * hidden properties.
  */
@@ -103,6 +109,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
 }
 
 /**
+ * 尝试为一个值创建一个观察者实例， 如果成功观察，返回新的观察者， 或现有的观察者(如果值已经有一个)。
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
@@ -130,6 +137,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 }
 
 /**
+ * 定义一个响应式属性在一个对象上
  * Define a reactive property on an Object.
  */
 export function defineReactive (
@@ -141,11 +149,13 @@ export function defineReactive (
 ) {
   const dep = new Dep()
 
+  // 属性不可以再被配置
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
   }
 
+  // 兼容之前就定义好的getter或者setter
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
@@ -159,7 +169,7 @@ export function defineReactive (
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
-      if (Dep.target) {
+      if (Dep.target) { // 如果已经有Dep.target收集依赖
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
@@ -187,13 +197,16 @@ export function defineReactive (
       } else {
         val = newVal
       }
+      // 更新childOb的状态
       childOb = !shallow && observe(newVal)
+      // 触发更新
       dep.notify()
     }
   })
 }
 
 /**
+ * 设置一个对象的属性。添加新的属性和 触发更改通知，如果属性没有 已经存在。
  * Set a property on an object. Adds the new property and
  * triggers change notification if the property doesn't
  * already exist.
@@ -225,12 +238,15 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target[key] = val
     return val
   }
+  // 将新添加的值在val中定义成响应式对象
   defineReactive(ob.value, key, val)
+  // 触发更新
   ob.dep.notify()
   return val
 }
 
 /**
+ * 删除一个属性
  * Delete a property and trigger change if necessary.
  */
 export function del (target: Array<any> | Object, key: any) {
@@ -262,6 +278,7 @@ export function del (target: Array<any> | Object, key: any) {
 }
 
 /**
+ *  当数组被接触时，收集数组元素上的依赖项，因为不能像属性getter那样截取数组元素访问。
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
  */

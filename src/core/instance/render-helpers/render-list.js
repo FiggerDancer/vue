@@ -3,6 +3,7 @@
 import { isObject, isDef, hasSymbol } from 'core/util/index'
 
 /**
+ * 用于呈现v-for列表的运行时助手。
  * Runtime helper for rendering v-for lists.
  */
 export function renderList (

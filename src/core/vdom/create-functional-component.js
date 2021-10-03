@@ -17,6 +17,7 @@ import {
   validateProp
 } from '../util/index'
 
+// 函数渲染上下文
 export function FunctionalRenderContext (
   data: VNodeData,
   props: Object,
@@ -25,6 +26,7 @@ export function FunctionalRenderContext (
   Ctor: Class<Component>
 ) {
   const options = Ctor.options
+  // 确保功能组件中的createElement函数 获取一个唯一的上下文——这对于正确的命名槽检查是必要的
   // ensure the createElement function in functional components
   // gets a unique context - this is necessary for correct named slot check
   let contextVm
@@ -33,6 +35,7 @@ export function FunctionalRenderContext (
     // $flow-disable-line
     contextVm._original = parent
   } else {
+    // 传入的上下文vm也是一个函数上下文。 在这个例子中，我们想要确保我们能够得到一个hold 上下文实例
     // the context vm passed in is a functional context as well.
     // in this case we want to make sure we are able to get a hold to the
     // real context instance.
@@ -91,6 +94,7 @@ export function FunctionalRenderContext (
 
 installRenderHelpers(FunctionalRenderContext.prototype)
 
+// 创建函数组件
 export function createFunctionalComponent (
   Ctor: Class<Component>,
   propsData: ?Object,
@@ -132,6 +136,7 @@ export function createFunctionalComponent (
   }
 }
 
+// 克隆标签函数结果
 function cloneAndMarkFunctionalResult (vnode, data, contextVm, options, renderContext) {
   // #7817 clone node before setting fnContext, otherwise if the node is reused
   // (e.g. it was from a cached normal slot) the fnContext causes named slots
@@ -148,6 +153,7 @@ function cloneAndMarkFunctionalResult (vnode, data, contextVm, options, renderCo
   return clone
 }
 
+// 合并属性
 function mergeProps (to, from) {
   for (const key in from) {
     to[camelize(key)] = from[key]
